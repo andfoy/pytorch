@@ -219,6 +219,13 @@ static AdvancedIndex make_info(Tensor self, const torch::List<c10::optional<at::
     TORCH_CHECK_INDEX(false, "shape mismatch: indexing tensors could not be broadcast together"
                    " with shapes ", shapes_as_str(indices));
   }
+
+  for(Tensor index: indices) {
+    if(index.has_value()) {
+      std::cout << "Index size: " << std::move(*index) << std::endl;
+    }
+  }
+
   // add missing null Tensors so that it matches self.dim()
   while (indices.size() < (size_t)self.dim()) {
     indices.emplace_back();
@@ -285,6 +292,12 @@ static TensorIterator make_index_out_iterator(const AdvancedIndex& info, Tensor&
 
 Tensor index(const Tensor & self, const torch::List<c10::optional<Tensor>>& indices) {
   TORCH_CHECK_INDEX(indices.size() <= (size_t)self.dim(), "too many indices for tensor of dimension ", self.dim(), " (got ", indices.size(), ")");
+
+  for(c10::optional<Tensor> index: indices) {
+    if(index.has_value()) {
+      std::cout << "Index size: " << std::move(*index) << std::endl;
+    }
+  }
 
   auto info = make_info(self, indices);
   auto iter = make_index_iterator(info);
