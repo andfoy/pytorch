@@ -241,6 +241,8 @@ static AdvancedIndex make_info(Tensor self, const torch::List<c10::optional<at::
       indices[i] = indices[i].to(self.device());
     }
   }
+  std::cout << "Input size: " << self.sizes() << "\n";
+
   return AdvancedIndex(self, indices);
 }
 
