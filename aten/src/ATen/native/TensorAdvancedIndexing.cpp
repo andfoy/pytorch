@@ -226,13 +226,25 @@ static AdvancedIndex make_info(Tensor self, const torch::List<c10::optional<at::
     }
   }
 
+  std::cout << std::endl;
+
   // add missing null Tensors so that it matches self.dim()
   while (indices.size() < (size_t)self.dim()) {
     indices.emplace_back();
   }
+
+  for(Tensor index: indices) {
+    if(index.defined()) {
+      std::cout << "Expanded index size: " << index.sizes() << std::endl;
+    } else {
+      std::cout << "Nil index" << std::endl;
+    }
+  }
+
   // if the non-null indices are not all adjacent, transpose self and indices
   // together so that they're adjacent at the front
   if (!hasContiguousSubspace(indices)) {
+    std::cout << "Not contiguous" << std::endl;
     std::tie(self, indices) = transposeToFront(self, indices);
   }
   // Ensure indices are on the same device as self
