@@ -222,7 +222,7 @@ static AdvancedIndex make_info(Tensor self, const torch::List<c10::optional<at::
 
   for(Tensor index: indices) {
     if(index.defined()) {
-      std::cout << "Index size: " << index.sizes() << std::endl;
+      std::cout << "Expanded index size: " << index.sizes() << std::endl;
     }
   }
 
@@ -296,7 +296,7 @@ Tensor index(const Tensor & self, const torch::List<c10::optional<Tensor>>& indi
   for(c10::optional<Tensor> index: indices) {
     if(index.has_value()) {
       auto moved_index = std::move(*index);
-      std::cout << "Index size: " << moved_index.sizes() << std::endl;
+      std::cout << "Initial index size: " << moved_index.sizes() << std::endl;
     }
   }
 
