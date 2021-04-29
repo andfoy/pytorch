@@ -15,6 +15,85 @@ DEFINE_DISPATCH(flip_stub);
 
 constexpr size_t dim_bitset_size = 64;
 
+template <typename scalar_t>
+void inline flip_old_cpu_kernel(
+  const int64_t total_dims,
+  const std::vector<int64_t>& stride_contiguous_v,
+  const std::bitset<dim_bitset_size>& flip_dims_b,
+  const Tensor& in_tensor,
+  Tensor& out_tensor
+){
+  const int64_t numel = in_tensor.numel();
+  const scalar_t* in_tensor_d = in_tensor.data_ptr<scalar_t>();
+  scalar_t* out_tensor_d = out_tensor.data_ptr<scalar_t>();
+  auto sizes_v = in_tensor.sizes().vec();
+  auto strides_v = in_tensor.strides().vec();
+
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
+  at::parallel_for(0, numel, 1000, [&](int64_t start, int64_t end) {
+    for (auto i = start; i < end; i++) {
+      int64_t cur_indices = i;
+      int64_t rem = 0;
+      int64_t dst_offset = 0;
+
+      for (int64_t d = 0; d < total_dims; d++) {
+        int64_t temp = cur_indices;
+        cur_indices = cur_indices / stride_contiguous_v[d];
+        rem = temp - cur_indices * stride_contiguous_v[d];
+        dst_offset += flip_dims_b[d] ? (sizes_v[d] - 1 - cur_indices) * strides_v[d] : cur_indices * strides_v[d];
+        cur_indices = rem;
+      }
+      out_tensor_d[i] = in_tensor_d[dst_offset];
+    }
+  });
+}
+
+
+Tensor flip_old_cpu(const Tensor& self, IntArrayRef dims) {
+  auto in_tensor = self;
+  const int64_t total_dims = in_tensor.dim();
+  auto flip_dims_b = at::dim_list_to_bitset(dims, total_dims);
+  Tensor out_tensor = at::empty_like(in_tensor, LEGACY_CONTIGUOUS_MEMORY_FORMAT);
+
+  // create contiguous strides for input tensor
+  auto stride_contiguous_v = std::vector<int64_t>(total_dims);
+  for (int64_t i = total_dims - 1; i >= 0; i--) {
+    if (i == total_dims - 1) {
+      stride_contiguous_v[i] = 1;
+    } else {
+      stride_contiguous_v[i] = std::max<int64_t>(in_tensor.size(i + 1), 1) * stride_contiguous_v[i + 1];
+    }
+  }
+
+  if (in_tensor.is_quantized()) {
+    // NOLINTNEXTLINE(clang-diagnostic-unused-variable)
+    AT_DISPATCH_QINT_AND_SUB_BYTE_TYPES(in_tensor.scalar_type(),
+                                        "flip_quantized_cpu", [&] {
+      flip_old_cpu_kernel<scalar_t>(
+        total_dims,
+        stride_contiguous_v,
+        flip_dims_b,
+        in_tensor,
+        out_tensor
+      );
+    });
+  } else {
+    AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND3(kBool, kHalf, kBFloat16,
+                                          in_tensor.scalar_type(),
+                                          "flip_cpu", [&] {
+      flip_old_cpu_kernel<scalar_t>(
+        total_dims,
+        stride_contiguous_v,
+        flip_dims_b,
+        in_tensor,
+        out_tensor
+      );
+    });
+  }
+
+  return out_tensor;
+}
+
 Tensor build_index(int64_t num_dims, int64_t flip_dim, int64_t dim_size) {
   auto new_shape = std::vector<int64_t>(num_dims, 1);
   new_shape[flip_dim] = dim_size;
