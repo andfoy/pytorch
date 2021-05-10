@@ -4077,7 +4077,7 @@
   python_module: nn
   variants: function
 
-- func: flip(Tensor self, int[] dims) -> Tensor
+- func: flip(Tensor self, int[] dims, int grain_size=3000) -> Tensor
   variants: function, method
   dispatch:
     CPU, QuantizedCPU: flip_cpu

@@ -87,14 +87,14 @@ struct Indexer {
 };
 
 template <typename scalar_t>
-void flip_cpu_kernel(TensorIterator& iter) {
+void flip_cpu_kernel(TensorIterator& iter, const int grain_size) {
   int ntensor = iter.ntensors();
   // When launch the index parallel version, set a relative samll grain size
   // less than the INTERNAL::GRAIN_SIZE to make the whole available thread
   // numbers get more balanced work load and a better cache location. The grain
   // size here is chosen by the op benchmark to overcome the thread launch
   // overhead. This value was taken from the AdvancedIndexing kernel.
-  const int index_parallel_grain_size = 3000;
+  // const int index_parallel_grain_size = 3000;
   auto loop = [&](char** data, const int64_t* strides, int64_t n) {
     auto indexer = Indexer(ntensor - 2, &data[2], &strides[2]);
     char* dst = data[0];
@@ -107,10 +107,10 @@ void flip_cpu_kernel(TensorIterator& iter) {
     }
   };
 
-  iter.for_each(loop, index_parallel_grain_size);
+  iter.for_each(loop, grain_size);
 }
 
-Tensor flip_cpu(const Tensor& self, IntArrayRef dims) {
+Tensor flip_cpu(const Tensor& self, IntArrayRef dims, int grain_size) {
   if(dims.size() == 0) {
     return self.clone();
   }
@@ -142,12 +142,12 @@ Tensor flip_cpu(const Tensor& self, IntArrayRef dims) {
   if (input.is_quantized()) {
     AT_DISPATCH_QINT_AND_SUB_BYTE_TYPES(
         input.scalar_type(), "flip_quantized_cpu", [&] {
-          flip_cpu_kernel<scalar_t>(iter);
+          flip_cpu_kernel<scalar_t>(iter, grain_size);
         });
   } else {
     AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND3(
         kBool, kHalf, kBFloat16, input.scalar_type(), "flip_cpu", [&] {
-          flip_cpu_kernel<scalar_t>(iter);
+          flip_cpu_kernel<scalar_t>(iter, grain_size);
         });
   }
   auto result = iter.output();

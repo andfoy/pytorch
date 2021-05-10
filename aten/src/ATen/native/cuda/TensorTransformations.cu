@@ -72,7 +72,7 @@ __global__ void flip_cuda_kernel(
 }
 
 // Flip tensor given a list of dims
-Tensor flip_cuda(const Tensor& self, IntArrayRef dims) {
+Tensor flip_cuda(const Tensor& self, IntArrayRef dims, int grain_size) {
   auto in_tensor = self;
   const int64_t flip_dims_size = dims.size(), total_dims = in_tensor.dim(), N = in_tensor.numel();
   flip_check_errors(total_dims, flip_dims_size, dims);
