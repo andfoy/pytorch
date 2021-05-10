@@ -846,7 +846,7 @@ class ShapePropagator {
             "aten::log_sigmoid(Tensor self) -> Tensor",
             "aten::floor(Tensor self) -> Tensor",
             "aten::frac(Tensor self) -> Tensor",
-            "aten::flip(Tensor self, int[] dims) -> Tensor",
+            "aten::flip(Tensor self, int[] dims, int? grain_size=3000) -> Tensor",
             "aten::feature_alpha_dropout(Tensor input, float p, bool train) -> Tensor",
             "aten::feature_dropout(Tensor input, float p, bool train) -> Tensor",
             "aten::hardshrink(Tensor self, Scalar lambd) -> Tensor",

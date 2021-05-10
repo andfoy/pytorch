@@ -1163,8 +1163,8 @@
 - name: one_hot(Tensor self, int num_classes=-1) -> Tensor
   self: non_differentiable
 
-- name: flip(Tensor self, int[] dims) -> Tensor
-  self: grad.flip(dims)
+- name: flip(Tensor self, int[] dims, int grain_size=3000) -> Tensor
+  self: grad.flip(dims, grain_size)
 
 - name: roll(Tensor self, int[1] shifts, int[1] dims=[]) -> Tensor
   self: grad.roll(fmap(reverse_list(shifts), [](int64_t i){return -i;}), reverse_list(dims))
