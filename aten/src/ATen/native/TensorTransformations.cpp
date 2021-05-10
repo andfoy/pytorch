@@ -47,7 +47,7 @@ void inline flip_old_cpu_kernel(
 }
 
 
-Tensor flip_old_cpu(const Tensor& self, IntArrayRef dims, int64_t grain_size) {
+Tensor flip_old_cpu(const Tensor& self, IntArrayRef dims) {
   auto in_tensor = self;
   const int64_t total_dims = in_tensor.dim();
   auto flip_dims_b = at::dim_list_to_bitset(dims, total_dims);

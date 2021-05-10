@@ -4077,11 +4077,11 @@
   python_module: nn
   variants: function
 
-- func: flip_old(Tensor self, int[] dims, int grain_size=3000) -> Tensor
+- func: flip_old(Tensor self, int[] dims) -> Tensor
   variants: function, method
   dispatch:
     CPU, QuantizedCPU: flip_old_cpu
-    CUDA: flip_cuda
+    # CUDA: flip_cuda
 
 - func: flip(Tensor self, int[] dims, int grain_size=3000) -> Tensor
   variants: function, method
